@@ -79,6 +79,35 @@ SELECT
 FROM rolling_total_cte;
 
 
+-- ranking by layoffs
+
+SELECT *
+FROM layoffs_staging2;
+
+WITH company_by_yearly_layoffs AS (
+	SELECT 
+		company,
+        YEAR(`date`) AS `year`,
+        SUM(total_laid_off) AS total_layoff
+	FROM layoffs_staging2
+    GROUP BY company,`year`
+), 
+company_dense_rank AS (
+	SELECT 
+		*,
+		DENSE_RANK() OVER(
+			PARTITION BY `year` 
+            ORDER BY total_layoff DESC) 
+            AS ranking
+	FROM company_by_yearly_layoffs
+    WHERE `year` IS NOT NULL
+)
+
+SELECT *
+FROM company_dense_rank
+WHERE ranking <= 5;
+
+
 
 
 
